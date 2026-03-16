@@ -10,10 +10,10 @@ glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
 
-print("Starting ERP Stage Load...")
+print("Starting CRM Stage Load...")
 
 # -----------------------------
-# Fetch Secrets Manager Values
+# Fetch Secrets
 # -----------------------------
 secret_name = "enterprise-sales-dwh-credentials"
 region_name = "us-east-1"
@@ -47,12 +47,12 @@ db_properties = {
 }
 
 # -----------------------------
-# S3 ERP Source Files
+# S3 CRM Files
 # -----------------------------
 tables = {
-    "erp_cust_az12": "s3://enterprise-db-stage/datasets/source_erp/CUST_AZ12.csv",
-    "erp_loc_a101": "s3://enterprise-db-stage/datasets/source_erp/LOC_A101.csv",
-    "erp_px_cat_g1v2": "s3://enterprise-db-stage/datasets/source_erp/PX_CAT_G1V2.csv"
+    "crm_cust_info": "s3://enterprise-db-stage/datasets/source_crm/cust_info.csv",
+    "crm_prd_info": "s3://enterprise-db-stage/datasets/source_crm/prd_info.csv",
+    "crm_sales_details": "s3://enterprise-db-stage/datasets/source_crm/sales_details.csv"
 }
 
 # -----------------------------
@@ -73,6 +73,6 @@ for table, path in tables.items():
 
     print(f"{table} loaded successfully")
 
-print("ERP Stage Load Completed")
+print("CRM Stage Load Completed")
 
 job.commit()
