@@ -1,0 +1,69 @@
+enterprise-datawarehouse-AWS
+├── architecture
+├── database
+│   ├── datasets
+│   │   ├── source_crm
+│   │   │   ├── cust_info.csv
+│   │   │   ├── prd_info.csv
+│   │   │   └── sales_details.csv
+│   │   └── source_erp
+│   │       ├── CUST_AZ12.csv
+│   │       ├── LOC_A101.csv
+│   │       └── PX_CAT_G1V2.csv
+│   ├── schema_consumption
+│   │   ├── ddl
+│   │   │   ├── ddl_dim_customers.sql
+│   │   │   ├── ddl_dim_products.sql
+│   │   │   └── ddl_fact_sales.sql
+│   │   ├── stored_procedures
+│   │   │   ├── load_dim_customers.sql
+│   │   │   ├── load_dim_products.sql
+│   │   │   └── load_fact_sales.sql
+│   │   └── views
+│   │       ├── view_dim_customers.sql
+│   │       ├── view_dim_products.sql
+│   │       └── view_fact_sales.sql
+│   ├── schema_curated
+│   │   ├── ddl
+│   │   │   └── create_curated_tables.sql
+│   │   └── stored_procedures
+│   │       ├── create_curated_tables.sql
+│   │       ├── load_crm_cust_info.sql
+│   │       ├── load_crm_prd_info.sql
+│   │       ├── load_crm_sales_details.sql
+│   │       ├── load_erp_cust_az12.sql
+│   │       ├── load_erp_loc_a101.sql
+│   │       └── load_erp_px_cat_g1v2.sql
+│   └── schema_stage
+│       ├── ddl
+│       │   ├── crm_cust_info.sql
+│       │   ├── crm_prd_info.sql
+│       │   ├── crm_sales_details.sql
+│       │   ├── erp_cust_az12.sql
+│       │   ├── erp_loc_a101.sql
+│       │   └── erp_px_cat_g1v2.sql
+│       └── stored_procedures
+│           ├── create_stage_tables.sql
+│           └── load_stage_layer.sql
+├── docs
+│   ├── data_catalog.md
+│   ├── data_flow_diagram.jpg
+│   ├── dim_fct_mapping.jpg
+│   ├── high_level_architecture.jpg
+│   └── naming_conventions.md
+├── glue_jobs
+│   ├── curated
+│   └── stage
+├── infrastructure
+│   ├── iam
+│   └── policies
+├── lambda
+│   ├── api_service
+│   ├── etl_trigger
+│   └── sql_runner
+├── quicksight
+├── step_functions
+│   └── etl_state_machine.json
+├── LICENSE
+├── project_structure.py
+└── README.md
