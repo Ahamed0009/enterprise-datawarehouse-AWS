@@ -1,0 +1,163 @@
+Resources:
+  StateMachine6477bdcb:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      Definition:
+        Comment: 'ETL Step Function: Curated parallel, then consumption sequential'
+        StartAt: CuratedParallel
+        States:
+          CuratedParallel:
+            Type: Parallel
+            Branches:
+              - StartAt: CuratedCRM
+                States:
+                  CuratedCRM:
+                    Type: Task
+                    Resource: arn:aws:states:::lambda:invoke
+                    Output: '{% $states.result.Payload %}'
+                    Arguments:
+                      FunctionName: ${lambdainvoke_FunctionName_635ebf29}
+                      Payload: '{% $states.input %}'
+                    Retry:
+                      - ErrorEquals:
+                          - Lambda.ServiceException
+                          - Lambda.AWSLambdaException
+                          - Lambda.SdkClientException
+                          - Lambda.TooManyRequestsException
+                        IntervalSeconds: 1
+                        MaxAttempts: 3
+                        BackoffRate: 2
+                        JitterStrategy: FULL
+                    End: true
+                    Comment: Curated CRM Lambda
+              - StartAt: CuratedERP
+                States:
+                  CuratedERP:
+                    Type: Task
+                    Resource: arn:aws:states:::lambda:invoke
+                    Output: '{% $states.result.Payload %}'
+                    Arguments:
+                      FunctionName: ${lambdainvoke_FunctionName_619ff983}
+                      Payload: '{% $states.input %}'
+                    Retry:
+                      - ErrorEquals:
+                          - Lambda.ServiceException
+                          - Lambda.AWSLambdaException
+                          - Lambda.SdkClientException
+                          - Lambda.TooManyRequestsException
+                        IntervalSeconds: 1
+                        MaxAttempts: 3
+                        BackoffRate: 2
+                        JitterStrategy: FULL
+                    End: true
+                    Comment: Curated ERP Lambda
+            Next: DimCustomers
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                Next: FailState
+            Comment: Execute ERP and CRM lambdas in parallel
+          DimCustomers:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Output: '{% $states.result.Payload %}'
+            Arguments:
+              FunctionName: ${lambdainvoke_FunctionName_48eaed07}
+              Payload: '{% $states.input %}'
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 1
+                MaxAttempts: 3
+                BackoffRate: 2
+                JitterStrategy: FULL
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                Next: FailState
+            Next: DimProducts
+            Comment: Build dim_customers table
+          DimProducts:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Output: '{% $states.result.Payload %}'
+            Arguments:
+              FunctionName: ${lambdainvoke_FunctionName_f5ca8b0c}
+              Payload: '{% $states.input %}'
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 1
+                MaxAttempts: 3
+                BackoffRate: 2
+                JitterStrategy: FULL
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                Next: FailState
+            Next: FactSales
+            Comment: Build dim_products table
+          FactSales:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Output: '{% $states.result.Payload %}'
+            Arguments:
+              FunctionName: ${lambdainvoke_FunctionName_7e459b4a}
+              Payload: '{% $states.input %}'
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.AWSLambdaException
+                  - Lambda.SdkClientException
+                  - Lambda.TooManyRequestsException
+                IntervalSeconds: 1
+                MaxAttempts: 3
+                BackoffRate: 2
+                JitterStrategy: FULL
+            Catch:
+              - ErrorEquals:
+                  - States.ALL
+                Next: FailState
+            Next: SuccessState
+            Comment: Build fact_sales table
+          SuccessState:
+            Type: Succeed
+          FailState:
+            Type: Fail
+            Cause: ETL Lambda Failed
+        QueryLanguage: JSONata
+      DefinitionSubstitutions:
+        lambdainvoke_FunctionName_635ebf29: >-
+          arn:aws:lambda:us-east-1:495688866723:function:lambda_curated_crm:$LATEST
+        lambdainvoke_FunctionName_619ff983: >-
+          arn:aws:lambda:us-east-1:495688866723:function:lambda_curated_erp:$LATEST
+        lambdainvoke_FunctionName_48eaed07: >-
+          arn:aws:lambda:us-east-1:495688866723:function:lambda_consumption_dim_customers:$LATEST
+        lambdainvoke_FunctionName_f5ca8b0c: >-
+          arn:aws:lambda:us-east-1:495688866723:function:lambda_consumption_dim_products:$LATEST
+        lambdainvoke_FunctionName_7e459b4a: >-
+          arn:aws:lambda:us-east-1:495688866723:function:lambda_consumption_fact_sales:$LATEST
+      RoleArn: arn:aws:iam::495688866723:role/StepFunctions_ETL_Lambda_Invoke_Role
+      StateMachineName: StateMachine6477bdcb
+      StateMachineType: STANDARD
+      EncryptionConfiguration:
+        Type: AWS_OWNED_KEY
+      LoggingConfiguration:
+        Level: 'ALL'
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn:
+                Fn::GetAtt:
+                  - LogGroup4c214e3a
+                  - Arn
+  LogGroup4c214e3a:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/vendedlogs/states/StateMachine6477bdcb-Logs
