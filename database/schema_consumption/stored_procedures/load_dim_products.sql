@@ -12,8 +12,10 @@ Script Purpose:
 ===============================================================================
 */
 
+-- DROP PROCEDURE consumption.load_dim_products();
+
 CREATE OR REPLACE PROCEDURE consumption.load_dim_products()
-LANGUAGE plpgsql
+ LANGUAGE plpgsql
 AS $procedure$
 DECLARE
     start_time TIMESTAMP;
@@ -59,7 +61,9 @@ BEGIN
     start_time := clock_timestamp();
     RAISE NOTICE '>> [START] INSERT REGION';
 
-    TRUNCATE TABLE consumption.dim_products;
+
+    -- TRUNCATE TABLE consumption.dim_products; -- Disabled due to FK constraints
+    DELETE FROM consumption.dim_products; -- Safe alternative
 
     INSERT INTO consumption.dim_products (
         product_id,
@@ -123,5 +127,6 @@ EXCEPTION
         RAISE NOTICE '========================================';
 
 END;
-$procedure$;
+$procedure$
+;
 

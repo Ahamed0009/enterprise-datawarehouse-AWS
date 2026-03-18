@@ -7,8 +7,10 @@ Purpose:
 ===============================================================================
 */
 
+-- DROP PROCEDURE consumption.load_dim_customers();
+
 CREATE OR REPLACE PROCEDURE consumption.load_dim_customers()
-LANGUAGE plpgsql
+ LANGUAGE plpgsql
 AS $procedure$
 DECLARE
     start_time TIMESTAMP;
@@ -42,8 +44,8 @@ BEGIN
     RAISE NOTICE '>> [START] INSERT REGION';
     start_time := clock_timestamp();
 
-    -- Optional: truncate before insert
-    TRUNCATE TABLE consumption.dim_customers;
+    -- TRUNCATE TABLE consumption.dim_customers; -- Disabled due to FK constraints
+    DELETE FROM consumption.dim_customers; -- Safe alternative
 
     INSERT INTO consumption.dim_customers (
         customer_id,
@@ -92,5 +94,5 @@ EXCEPTION
         RAISE NOTICE 'Error Message: %', SQLERRM;
         RAISE NOTICE '========================================';
 END;
-$procedure$;
-
+$procedure$
+;

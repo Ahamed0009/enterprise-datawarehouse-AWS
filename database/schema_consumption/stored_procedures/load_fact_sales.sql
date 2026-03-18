@@ -12,18 +12,17 @@ Actions Performed:
 ===============================================================================
 */
 
-CREATE OR REPLACE PROCEDURE consumption.load_fact_sales()
-LANGUAGE plpgsql
-AS $procedure$
+-- DROP PROCEDURE consumption.load_fact_sales();
 
+CREATE OR REPLACE PROCEDURE consumption.load_fact_sales()
+ LANGUAGE plpgsql
+AS $procedure$
 DECLARE
     start_time TIMESTAMP;
     end_time TIMESTAMP;
     batch_start_time TIMESTAMP;
     batch_end_time TIMESTAMP;
-
     record_count BIGINT;
-
 BEGIN
 
     batch_start_time := clock_timestamp();
@@ -40,23 +39,26 @@ BEGIN
 
     RAISE NOTICE '>> [START] COUNT VALIDATION REGION';
 
+    -- History:
+    -- Previous versions used LEFT JOIN with COALESCE or default keys
+    --   - Failed due to FK constraints
+    --   - NULLs in product/customer keys
+    --   - Missing columns in dim tables
+    -- Current approach: INNER JOIN ensures only valid rows are inserted
+
     SELECT COUNT(*)
     INTO record_count
     FROM curated.crm_sales_details sd
-    LEFT JOIN consumption.dim_products pr
+    INNER JOIN consumption.dim_products pr
         ON sd.sls_prd_key = pr.product_number
-    LEFT JOIN consumption.dim_customers cu
+    INNER JOIN consumption.dim_customers cu
         ON sd.sls_cust_id = cu.customer_id;
 
     RAISE NOTICE '>> Records to be inserted: %', record_count;
-
     RAISE NOTICE '>> [END] COUNT VALIDATION REGION';
 
     end_time := clock_timestamp();
-
-    RAISE NOTICE '>> Duration: % seconds',
-        EXTRACT(EPOCH FROM (end_time - start_time));
-
+    RAISE NOTICE '>> Duration: % seconds', EXTRACT(EPOCH FROM (end_time - start_time));
     RAISE NOTICE '>> -------------------------------------';
 
     ------------------------------------------------
@@ -64,13 +66,12 @@ BEGIN
     ------------------------------------------------
 
     start_time := clock_timestamp();
-
     RAISE NOTICE '>> [START] INSERT REGION';
 
+    -- Safe to truncate now with INNER JOIN
     TRUNCATE TABLE consumption.fact_sales;
 
     INSERT INTO consumption.fact_sales (
-
         order_number,
         product_key,
         customer_key,
@@ -81,9 +82,7 @@ BEGIN
         quantity,
         price
     )
-
     SELECT
-
         sd.sls_ord_num  AS order_number,
         pr.product_key  AS product_key,
         cu.customer_key AS customer_key,
@@ -93,22 +92,15 @@ BEGIN
         sd.sls_sales    AS sales_amount,
         sd.sls_quantity AS quantity,
         sd.sls_price    AS price
-
     FROM curated.crm_sales_details sd
-
-    LEFT JOIN consumption.dim_products pr
+    INNER JOIN consumption.dim_products pr
         ON sd.sls_prd_key = pr.product_number
-
-    LEFT JOIN consumption.dim_customers cu
+    INNER JOIN consumption.dim_customers cu
         ON sd.sls_cust_id = cu.customer_id;
 
-    RAISE NOTICE '>> [END] INSERT REGION';
-
     end_time := clock_timestamp();
-
-    RAISE NOTICE '>> Load Duration: % seconds',
-        EXTRACT(EPOCH FROM (end_time - start_time));
-
+    RAISE NOTICE '>> [END] INSERT REGION';
+    RAISE NOTICE '>> Load Duration: % seconds', EXTRACT(EPOCH FROM (end_time - start_time));
     RAISE NOTICE '>> -------------------------------------';
 
     ------------------------------------------------
@@ -119,19 +111,16 @@ BEGIN
 
     RAISE NOTICE '================================================';
     RAISE NOTICE 'Load Completed: consumption.fact_sales';
-    RAISE NOTICE 'Total Duration: % seconds',
-        EXTRACT(EPOCH FROM (batch_end_time - batch_start_time));
+    RAISE NOTICE 'Total Duration: % seconds', EXTRACT(EPOCH FROM (batch_end_time - batch_start_time));
     RAISE NOTICE '================================================';
 
 EXCEPTION
-
     WHEN OTHERS THEN
-
         RAISE NOTICE '========================================';
         RAISE NOTICE 'ERROR OCCURRED DURING fact_sales LOAD';
         RAISE NOTICE 'Error Message: %', SQLERRM;
         RAISE NOTICE '========================================';
-
 END;
-$procedure$;
+$procedure$
+;
 
