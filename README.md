@@ -1,4 +1,4 @@
-# Enterprise-datawarehouse-AWS
+# Enterprise Datawarehouse AWS
 
 
 A modern enterprise data warehouse pipeline built using **AWS Glue, AWS Lambda, AWS Step Functions, Amazon RDS (PostgreSQL), and AWS S3** implementing a **multi-layer ETL architecture** with a **Sales Data Mart (Star Schema)** for analytics and reporting.
@@ -105,8 +105,8 @@ These run **in parallel** to improve pipeline performance.
 Execute stored procedures:
 
 
-curated.load_crm_*
-curated.load_erp_*
+- curated.load_crm_*
+- curated.load_erp_*
 
 
 Perform:
