@@ -1,4 +1,4 @@
-# enterprise-datawarehouse-AWS
+# Enterprise-datawarehouse-AWS
 
 
 A modern enterprise data warehouse pipeline built using **AWS Glue, AWS Lambda, AWS Step Functions, Amazon RDS (PostgreSQL), and AWS S3** implementing a **multi-layer ETL architecture** with a **Sales Data Mart (Star Schema)** for analytics and reporting.
@@ -27,13 +27,13 @@ The warehouse follows a **three-layer architecture**:
 
 # High-Level Architecture Diagram
 
-![High Level Architecture](docs/high_level_architecture.jpg)
+![High Level Architecture](docs/data_architecture.png)
 
 ---
 
 # Updated Data Flow
 
-
+```
 Source Systems
 ↓
 AWS S3 (CSV files)
@@ -51,7 +51,7 @@ AWS Lambda (Consumption Layer Build)
 Amazon RDS PostgreSQL (Consumption Layer - Star Schema)
 ↓
 BI / Analytics / Machine Learning
-
+```
 
 ---
 
@@ -74,11 +74,11 @@ This implementation replaces traditional orchestration (**Apache Airflow**) with
 
 # Orchestration – Step Functions Workflow
 
-The pipeline is orchestrated using:
+The pipeline is orchestrated using: ***ETL_CRM_ERP_Consumption_Workflow***
 
+---
 
-ETL_CRM_ERP_Consumption_Workflow
-
+![Step Function Architecture](docs/step_function_rchestration.png)
 
 ---
 
@@ -155,43 +155,12 @@ Successful completion routes to:
 
 ---
 
-# Data Sources
-
-(unchanged)
-
----
-
 # Data Flow Diagram
 
 ![Data Flow](docs/data_flow_diagram.jpg)
 
 ---
 
-# Data Flow & Lineage
-
-## Flow Overview
-
-
-Source Systems
-↓
-AWS S3
-↓
-AWS Glue (Stage Load)
-↓
-Stage Layer (RDS PostgreSQL)
-↓
-AWS Lambda (Curated Processing)
-↓
-Curated Layer
-↓
-AWS Lambda (Consumption Build)
-↓
-Consumption Layer (Star Schema)
-↓
-BI / Analytics / ML
-
-
----
 
 # Consumption Layer Table Mapping
 
