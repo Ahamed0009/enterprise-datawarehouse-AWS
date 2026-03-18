@@ -141,16 +141,10 @@ DimCustomers → DimProducts → FactSales
 
 Each step includes **Catch blocks**.
 
-Failures route to:
+Failures route to:  ❌ FailState
 
 
-❌ FailState
-
-
-Successful completion routes to:
-
-
-✅ SuccessState
+Successful completion routes to:  ✅ SuccessState
 
 
 ---
@@ -197,14 +191,14 @@ Raw landing zone for source data.
 
 ### Tables
 
-
+```
 stage.crm_sales_details
 stage.crm_cust_info
 stage.crm_prd_info
 stage.erp_cust_az12
 stage.erp_loc_a101
 stage.erp_px_cat_g1v2
-
+```
 
 ---
 
@@ -228,14 +222,14 @@ Clean and standardize raw data.
 
 ### Tables
 
-
+```
 curated.crm_sales_details
 curated.crm_cust_info
 curated.crm_prd_info
 curated.erp_cust_az12
 curated.erp_loc_a101
 curated.erp_px_cat_g1v2
-
+```
 
 ---
 
@@ -250,18 +244,18 @@ Analytics-ready data mart.
 AWS Lambda executes:
 
 
-consumption.load_dim_customers()
-consumption.load_dim_products()
-consumption.load_fact_sales()
+- consumption.load_dim_customers()
+- consumption.load_dim_products()
+- consumption.load_fact_sales()
 
 
 ### Tables
 
-
+```
 consumption.fact_sales
 consumption.dim_customers
 consumption.dim_products
-
+```
 
 ---
 
@@ -270,16 +264,16 @@ consumption.dim_products
 ## Curated Layer
 
 
-lambda_curated_crm
-lambda_curated_erp
+- lambda_curated_crm
+- lambda_curated_erp
 
 
 ## Consumption Layer
 
 
-lambda_consumption_dim_customers
-lambda_consumption_dim_products
-lambda_consumption_fact_sales
+- lambda_consumption_dim_customers
+- lambda_consumption_dim_products
+- lambda_consumption_fact_sales
 
 
 ---
@@ -287,8 +281,8 @@ lambda_consumption_fact_sales
 # Glue Jobs
 
 
-glue_stage_crm
-glue_stage_erp
+- glue_stage_crm
+- glue_stage_erp
 
 
 ---
@@ -387,3 +381,5 @@ MIT License
 
 LinkedIn  
 https://www.linkedin.com/in/ahamedyaseen0009/
+
+---
