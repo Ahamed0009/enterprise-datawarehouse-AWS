@@ -4,9 +4,8 @@ import boto3
 from botocore.exceptions import ClientError
 
 def lambda_handler(event, context):
-    print("Starting Lambda: Consumption Layer - Dim Customers...")
+    print("Starting Lambda: Consumption Dim Products Loader...")
 
-    # --- Secrets Manager Config ---
     secret_name = "enterprise-sales-dwh-credentials"
     region_name = "us-east-1"
 
@@ -21,7 +20,6 @@ def lambda_handler(event, context):
         raise e
 
     try:
-        # --- Connect to PostgreSQL ---
         conn = psycopg2.connect(
             host=db_creds['host'],
             port=db_creds['port'],
@@ -33,28 +31,20 @@ def lambda_handler(event, context):
         cursor = conn.cursor()
         print("Connected to PostgreSQL successfully")
 
-        # --- Execute Consumption SP ---
-        sp_name = "consumption.load_dim_customers"
-        print(f"Executing SP: {sp_name}()")
-        cursor.execute(f"CALL {sp_name}();")
+        sp_name = event.get('sp_name', 'consumption.load_dim_products()')
+        print(f"Executing SP: {sp_name}")
+        cursor.execute(f"CALL {sp_name};")
 
-        # --- Optional: check row count ---
-        table_name = "dim_customers"
-        try:
-            cursor.execute(f"SELECT COUNT(*) FROM consumption.{table_name};")
-            row_count = cursor.fetchone()[0]
-            print(f"Table consumption.{table_name} row count: {row_count}")
-        except Exception as e:
-            print(f"Warning: Cannot fetch row count for consumption.{table_name} - {e}")
+        # Optional: row count check
+        table_name = sp_name.split('.')[-1].replace('load_', '').replace('()', '')
+        cursor.execute(f"SELECT COUNT(*) FROM consumption.{table_name};")
+        row_count = cursor.fetchone()[0]
+        print(f"Table consumption.{table_name} row count: {row_count}")
 
         cursor.close()
         conn.close()
-        print("Consumption Layer - Dim Customers SP executed successfully")
 
-        return {
-            'statusCode': 200,
-            'body': json.dumps(f"{table_name} loaded successfully with {row_count} rows")
-        }
+        return {"status": "success", "table": table_name, "row_count": row_count}
 
     except Exception as e:
         print(f"Error executing SP: {e}")
