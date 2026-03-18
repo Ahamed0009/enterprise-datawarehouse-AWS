@@ -46,24 +46,37 @@ enterprise-datawarehouse-AWS
 │           ├── create_stage_tables.sql
 │           └── load_stage_layer.sql
 ├── docs
+│   ├── data_architecture.png
 │   ├── data_catalog.md
 │   ├── data_flow_diagram.jpg
 │   ├── dim_fct_mapping.jpg
-│   ├── high_level_architecture.jpg
-│   └── naming_conventions.md
+│   ├── naming_conventions.md
+│   └── step_function_rchestration.png
 ├── glue_jobs
-│   ├── curated
 │   └── stage
+│       ├── glue_stage_crm.py
+│       └── glue_stage_erp.py
 ├── infrastructure
 │   ├── iam
+│   │   └── roles
+│   │       └── GlueETLExecutionRole
+│   │           ├── GlueETLExecutionRolePolicy.json
+│   │           ├── policy_AWSGlueConsoleFullAccess.json
+│   │           └── policy_AWSGlueServiceRole.json
 │   └── policies
+│       └── AWSLambdaBasicExecutionRole.json
 ├── lambda
 │   ├── api_service
 │   ├── etl_trigger
+│   │   ├── lambda_consumption_dim_customers.py
+│   │   ├── lambda_consumption_dim_products.py
+│   │   ├── lambda_consumption_fact_sales.py
+│   │   ├── lambda_curated_crm.py
+│   │   └── lambda_curated_erp.py
 │   └── sql_runner
 ├── quicksight
 ├── step_functions
-│   └── etl_state_machine.json
+│   └── ETL_CRM_ERP_Consumption_Workflow.json
 ├── LICENSE
 ├── project_structure.py
 └── README.md
