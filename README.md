@@ -166,10 +166,7 @@ Successful completion routes to:  ✅ SuccessState
 
 ## Step 1 — Data Ingestion
 
-Source CSV files are stored in:
-
-
-AWS S3
+Source CSV files are stored in:  **AWS S3**
 
 
 **AWS Glue jobs** load them into **Stage Layer tables in RDS**.
@@ -289,7 +286,7 @@ consumption.dim_products
 
 # Repository Structure
 
-
+```
 enterprise-datawarehouse-001
 │
 ├── glue_jobs
@@ -316,7 +313,7 @@ enterprise-datawarehouse-001
 │
 ├── README.md
 └── LICENSE
-
+```
 
 ---
 
