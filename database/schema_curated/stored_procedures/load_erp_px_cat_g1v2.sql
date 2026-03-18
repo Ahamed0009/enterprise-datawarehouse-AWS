@@ -20,7 +20,6 @@ Usage Example:
 */
 
 -- DROP PROCEDURE curated.load_erp_px_cat_g1v2();
-
 CREATE OR REPLACE PROCEDURE curated.load_erp_px_cat_g1v2()
 LANGUAGE plpgsql
 AS $procedure$
@@ -46,32 +45,36 @@ BEGIN
     -- REGION: COUNT VALIDATION
     ------------------------------------------------
     error_region := 'COUNT VALIDATION REGION';
-
     start_time := clock_timestamp();
-
     RAISE NOTICE '>> [START] COUNT VALIDATION REGION';
 
     SELECT COUNT(*)
     INTO record_count
-    FROM stage.erp_px_cat_g1v2;
+    FROM (
+        SELECT
+            -- Keep history of direct selection
+            -- id, cat, subcat, maintenance
+
+            -- Explicit casting to varchar for type safety
+            "ID"::varchar AS id,
+            "CAT"::varchar AS cat,
+            "SUBCAT"::varchar AS subcat,
+            "MAINTENANCE"::varchar AS maintenance
+        FROM stage.erp_px_cat_g1v2
+    ) src;
 
     RAISE NOTICE '>> Records to be inserted: %', record_count;
 
     end_time := clock_timestamp();
-
     RAISE NOTICE '>> [END] COUNT VALIDATION REGION';
-    RAISE NOTICE '>> Duration: % seconds',
-        EXTRACT(EPOCH FROM (end_time - start_time));
+    RAISE NOTICE '>> Duration: % seconds', EXTRACT(EPOCH FROM (end_time - start_time));
     RAISE NOTICE '>> -------------------------------------';
-
 
     ------------------------------------------------
     -- REGION: INSERT DATA
     ------------------------------------------------
     error_region := 'INSERT REGION';
-
     start_time := clock_timestamp();
-
     RAISE NOTICE '>> [START] INSERT REGION';
 
     TRUNCATE TABLE curated.erp_px_cat_g1v2;
@@ -83,36 +86,29 @@ BEGIN
         maintenance
     )
     SELECT
-        id,
-        cat,
-        subcat,
-        maintenance
+        -- Explicit casting to maintain type safety
+        "ID"::varchar AS id,
+        "CAT"::varchar AS cat,
+        "SUBCAT"::varchar AS subcat,
+        "MAINTENANCE"::varchar AS maintenance
     FROM stage.erp_px_cat_g1v2;
 
     end_time := clock_timestamp();
-
     RAISE NOTICE '>> [END] INSERT REGION';
-    RAISE NOTICE '>> Load Duration: % seconds',
-        EXTRACT(EPOCH FROM (end_time - start_time));
+    RAISE NOTICE '>> Load Duration: % seconds', EXTRACT(EPOCH FROM (end_time - start_time));
     RAISE NOTICE '>> -------------------------------------';
-
 
     ------------------------------------------------
     -- BATCH COMPLETE
     ------------------------------------------------
-
     batch_end_time := clock_timestamp();
-
     RAISE NOTICE '================================================';
     RAISE NOTICE 'Load Completed: curated.erp_px_cat_g1v2';
-    RAISE NOTICE 'Total Duration: % seconds',
-        EXTRACT(EPOCH FROM (batch_end_time - batch_start_time));
+    RAISE NOTICE 'Total Duration: % seconds', EXTRACT(EPOCH FROM (batch_end_time - batch_start_time));
     RAISE NOTICE '================================================';
-
 
 EXCEPTION
     WHEN OTHERS THEN
-
         RAISE NOTICE '================================================';
         RAISE NOTICE 'ERROR OCCURRED';
         RAISE NOTICE 'Error Region: %', error_region;

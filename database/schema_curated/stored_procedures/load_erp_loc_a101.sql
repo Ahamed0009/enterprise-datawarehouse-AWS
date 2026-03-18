@@ -21,11 +21,11 @@ Usage Example:
 
 -- DROP PROCEDURE curated.load_erp_loc_a101();
 
+
 CREATE OR REPLACE PROCEDURE curated.load_erp_loc_a101()
 LANGUAGE plpgsql
 AS $procedure$
 DECLARE
-
     start_time TIMESTAMP;
     end_time TIMESTAMP;
     batch_start_time TIMESTAMP;
@@ -33,7 +33,6 @@ DECLARE
 
     record_count BIGINT;
     error_region TEXT;
-
 BEGIN
 
     batch_start_time := clock_timestamp();
@@ -46,21 +45,25 @@ BEGIN
     -- REGION: COUNT VALIDATION
     ------------------------------------------------
     error_region := 'COUNT VALIDATION REGION';
-
     start_time := clock_timestamp();
-
     RAISE NOTICE '>> [START] COUNT VALIDATION REGION';
 
     SELECT COUNT(*)
     INTO record_count
     FROM (
         SELECT
-            REPLACE(cid,'-','') AS cid,
+            -- Old broken attempts:
+            -- REPLACE(cid,'-','') AS cid
+            -- REPLACE(TRIM("CID"), '-'::text) AS cid
+
+            -- Fixed working REPLACE
+            REPLACE("CID"::text, '-'::text, '') AS cid,
+
             CASE
-                WHEN TRIM(cntry) = 'DE' THEN 'Germany'
-                WHEN TRIM(cntry) IN ('US','USA') THEN 'United States'
-                WHEN TRIM(cntry) = '' OR cntry IS NULL THEN 'n/a'
-                ELSE TRIM(cntry)
+                WHEN UPPER(TRIM("CNTRY")) = 'DE' THEN 'Germany'
+                WHEN UPPER(TRIM("CNTRY")) IN ('US','USA') THEN 'United States'
+                WHEN TRIM("CNTRY") = '' OR "CNTRY" IS NULL THEN 'n/a'
+                ELSE TRIM("CNTRY")
             END AS cntry
         FROM stage.erp_loc_a101
     ) src;
@@ -68,68 +71,52 @@ BEGIN
     RAISE NOTICE '>> Records to be inserted: %', record_count;
 
     end_time := clock_timestamp();
-
     RAISE NOTICE '>> [END] COUNT VALIDATION REGION';
-    RAISE NOTICE '>> Duration: % seconds',
-        EXTRACT(EPOCH FROM (end_time - start_time));
+    RAISE NOTICE '>> Duration: % seconds', EXTRACT(EPOCH FROM (end_time - start_time));
     RAISE NOTICE '>> -------------------------------------';
-
 
     ------------------------------------------------
     -- REGION: INSERT DATA
     ------------------------------------------------
     error_region := 'INSERT REGION';
-
     start_time := clock_timestamp();
-
     RAISE NOTICE '>> [START] INSERT REGION';
 
     TRUNCATE TABLE curated.erp_loc_a101;
 
-    INSERT INTO curated.erp_loc_a101 (
-        cid,
-        cntry
-    )
+    INSERT INTO curated.erp_loc_a101 (cid, cntry)
     SELECT
-        REPLACE(cid,'-',''),
+        -- Fixed working REPLACE
+        REPLACE("CID"::text, '-'::text, '') AS cid,
+
         CASE
-            WHEN TRIM(cntry) = 'DE' THEN 'Germany'
-            WHEN TRIM(cntry) IN ('US','USA') THEN 'United States'
-            WHEN TRIM(cntry) = '' OR cntry IS NULL THEN 'n/a'
-            ELSE TRIM(cntry)
-        END
+            WHEN UPPER(TRIM("CNTRY")) = 'DE' THEN 'Germany'
+            WHEN UPPER(TRIM("CNTRY")) IN ('US','USA') THEN 'United States'
+            WHEN TRIM("CNTRY") = '' OR "CNTRY" IS NULL THEN 'n/a'
+            ELSE TRIM("CNTRY")
+        END AS cntry
     FROM stage.erp_loc_a101;
 
     end_time := clock_timestamp();
-
     RAISE NOTICE '>> [END] INSERT REGION';
-    RAISE NOTICE '>> Load Duration: % seconds',
-        EXTRACT(EPOCH FROM (end_time - start_time));
+    RAISE NOTICE '>> Load Duration: % seconds', EXTRACT(EPOCH FROM (end_time - start_time));
     RAISE NOTICE '>> -------------------------------------';
-
 
     ------------------------------------------------
     -- BATCH COMPLETE
     ------------------------------------------------
-
     batch_end_time := clock_timestamp();
-
     RAISE NOTICE '================================================';
     RAISE NOTICE 'Load Completed: curated.erp_loc_a101';
-    RAISE NOTICE 'Total Duration: % seconds',
-        EXTRACT(EPOCH FROM (batch_end_time - batch_start_time));
+    RAISE NOTICE 'Total Duration: % seconds', EXTRACT(EPOCH FROM (batch_end_time - batch_start_time));
     RAISE NOTICE '================================================';
-
 
 EXCEPTION
     WHEN OTHERS THEN
-
         RAISE NOTICE '================================================';
         RAISE NOTICE 'ERROR OCCURRED';
         RAISE NOTICE 'Error Region: %', error_region;
         RAISE NOTICE 'Error Message: %', SQLERRM;
         RAISE NOTICE '================================================';
-
 END;
 $procedure$;
-
